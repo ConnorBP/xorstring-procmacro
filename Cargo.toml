@@ -3,7 +3,9 @@ name = "xorstring-procmacro"
 version = "0.1.0"
 authors = ["Mariell Hoversholm <proximyst@proximyst.com>"]
 edition = "2018"
-publish = false
+
+repository = "https://github.com/Proximyst/xorstring-procmacro"
+license = "BSD-3-Clause"
 
 [dependencies]
 lazy_static = "~1"
