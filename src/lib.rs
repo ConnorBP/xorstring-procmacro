@@ -4,24 +4,29 @@ extern crate proc_macro;
 
 use proc_macro2::Span;
 use quote::quote;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    num::Wrapping,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use syn::{parse_macro_input, Lit};
 
 lazy_static::lazy_static! {
     // Random key, trust me!
-    static ref XORKEY: u8 = xorstr_random_number(0, <u8>::max_value().into()) as u8;
+    static ref XORKEY: Wrapping<u8> = 
+        Wrapping(xorstr_random_number(Wrapping(0), Wrapping(<u8>::max_value().into())).0 as u8);
 
     // Generate a key using the compile time
-    static ref TEMP_KEY: u32 = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs() as u32
-                    & 0xFFFFFFF;
+    static ref TEMP_KEY: Wrapping<u32> =
+        Wrapping(SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as u32)
+            & Wrapping(0xFFFFFFF);
 }
 
-fn linear_congruent_generator(rounds: u32) -> u32 {
-    1013904223
-        + 1664525
+fn linear_congruent_generator(rounds: u32) -> Wrapping<u32> {
+    Wrapping(1013904223)
+        + Wrapping(1664525)
             * if rounds <= 0 {
                 *TEMP_KEY
             } else {
@@ -29,19 +34,19 @@ fn linear_congruent_generator(rounds: u32) -> u32 {
             }
 }
 
-fn xorstr_random() -> u32 {
+fn xorstr_random() -> Wrapping<u32> {
     linear_congruent_generator(10)
 }
 
-fn xorstr_random_number(min: u32, max: u32) -> u32 {
-    min + xorstr_random() % (max - min + 1)
+fn xorstr_random_number(min: Wrapping<u32>, max: Wrapping<u32>) -> Wrapping<u32> {
+    min + xorstr_random() % (max - min + Wrapping(1))
 }
 
 #[proc_macro]
 pub fn xorstring(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     if input.is_empty() {
         // fetch the key used for ALL encryptions for use in decryption
-        let key = *XORKEY;
+        let key = XORKEY.0;
         return quote! { (#key as u8) }.into();
     }
 
@@ -54,7 +59,7 @@ pub fn xorstring(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut encrypted = string.value();
     for (i, c) in encrypted.iter_mut().enumerate() {
         // XOR every character to encrypt it with the key
-        *c ^= (*XORKEY as usize + i) as u8;
+        *c ^= (Wrapping(XORKEY.0 as usize) + Wrapping(i)).0 as u8;
     }
 
     // ok boys it's encrypted, time to send it off to the caller!
