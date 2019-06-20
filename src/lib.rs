@@ -10,17 +10,20 @@ use syn::{parse_macro_input, Lit};
 lazy_static::lazy_static! {
     // Random key, trust me!
     static ref XORKEY: u8 = xorstr_random_number(0, <u8>::max_value().into()) as u8;
+
+    // Generate a key using the compile time
+    static ref TEMP_KEY: u32 = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as u32
+                    & 0xFFFFFFF;
 }
 
 fn linear_congruent_generator(rounds: u32) -> u32 {
     1013904223
         + 1664525
             * if rounds <= 0 {
-                SystemTime::now() // Generate a key using the compile time
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs() as u32
-                    & 0xFFFFFFF
+                *TEMP_KEY
             } else {
                 linear_congruent_generator(rounds - 1)
             }
