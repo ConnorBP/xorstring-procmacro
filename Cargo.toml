@@ -1,0 +1,15 @@
+[package]
+name = "xorstring-procmacro"
+version = "0.1.0"
+authors = ["Mariell Hoversholm <proximyst@proximyst.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+lazy_static = "~1"
+proc-macro2 = "~0.4"
+syn = "~0.15"
+quote = "~0.6"
+
+[lib]
+proc-macro = true
